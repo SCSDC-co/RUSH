@@ -1,6 +1,6 @@
 use std::fmt::Display;
 
-mod implementation;
+pub mod implementation;
 
 type BuiltinFn = fn(&mut super::Shell, &[String]) -> anyhow::Result<i32>;
 
@@ -47,7 +47,7 @@ static BUILTINS: &[Builtin] = &[
 impl super::Shell {
     pub fn execute_builtin(&mut self, name: &str, args: &[String]) -> anyhow::Result<Option<i32>> {
         if let Some(builtin) = BUILTINS.iter().find(|b| b.aliases.contains(&name)) {
-            return Ok(Some((builtin.function)(self, &args)?));
+            return Ok(Some((builtin.function)(self, args)?));
         }
 
         Ok(None)
