@@ -6,4 +6,5 @@ edition = "2024"
 [dependencies]
 anyhow = "1.0.105"
 dirs = "7.0.0"
-rustyline = "19.0.0"
+owo-colors = "4.4.0"
+rustyline = { version = "19.0.0", features = ["derive"] }

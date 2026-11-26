@@ -1,10 +1,11 @@
 use std::{env, fs::OpenOptions, io, path::PathBuf};
 
 use anyhow::Context;
-use rustyline::error::ReadlineError;
+use rustyline::{CompletionType, Editor, config::Configurer, error::ReadlineError};
 
 pub mod builtins;
 pub mod execute_command;
+pub mod helper;
 
 /// This is the shell, with all of his commands, and built-ins
 #[derive(Debug)]
@@ -34,7 +35,7 @@ impl Shell {
     pub fn run(&mut self) -> anyhow::Result<()> {
         let mut last_status = 0;
 
-        let mut rl = rustyline::DefaultEditor::new()?;
+        let mut rl = Editor::<helper::RushHelper, _>::default()?;
 
         match OpenOptions::new()
             .write(true)
@@ -47,6 +48,8 @@ impl Shell {
         }
 
         rl.load_history(&self.history_file)?;
+
+        rl.set_completion_type(CompletionType::List);
 
         while !self.quit {
             let readline = rl.readline(&format!("{} | {last_status} > ", self.cwd.display()));
