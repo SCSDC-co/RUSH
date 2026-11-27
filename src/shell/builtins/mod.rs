@@ -33,6 +33,11 @@ static BUILTINS: &[Builtin] = &[
         aliases: &["cd"],
     },
     Builtin {
+        function: implementation::history,
+        description: "Prints the last N history entries",
+        aliases: &["history"],
+    },
+    Builtin {
         function: implementation::exit,
         description: "Exits the shell",
         aliases: &["exit", "quit"],

@@ -1,7 +1,7 @@
 use std::{env, fs::OpenOptions, io, path::PathBuf};
 
 use anyhow::Context;
-use rustyline::{CompletionType, Editor, config::Configurer, error::ReadlineError};
+use rustyline::{CompletionType, Config, Editor, error::ReadlineError};
 
 pub mod builtins;
 pub mod execute_command;
@@ -35,8 +35,6 @@ impl Shell {
     pub fn run(&mut self) -> anyhow::Result<()> {
         let mut last_status = 0;
 
-        let mut rl = Editor::<helper::RushHelper, _>::default()?;
-
         match OpenOptions::new()
             .write(true)
             .create_new(true)
@@ -47,19 +45,25 @@ impl Shell {
             Err(e) => return Err(e.into()),
         }
 
-        rl.load_history(&self.history_file)?;
+        let config = Config::builder()
+            .completion_type(CompletionType::Circular)
+            .auto_add_history(true)
+            .build();
 
-        rl.set_completion_type(CompletionType::List);
+        let mut rl = Editor::<helper::RushHelper, _>::with_config(config)?;
+
+        rl.load_history(&self.history_file)?;
 
         while !self.quit {
             let readline = rl.readline(&format!("{} | {last_status} > ", self.cwd.display()));
 
             match readline {
                 Ok(i) => {
-                    rl.add_history_entry(&i)?;
                     last_status = self.execute_command(i)?;
                 }
-                Err(ReadlineError::Interrupted) => {}
+                Err(ReadlineError::Interrupted) => {
+                    last_status = 0;
+                }
                 Err(ReadlineError::Eof) => {
                     builtins::implementation::exit(self, &[])?;
                 }
@@ -68,9 +72,9 @@ impl Shell {
                     last_status = 1;
                 }
             }
-        }
 
-        rl.append_history(&self.history_file)?;
+            rl.append_history(&self.history_file)?;
+        }
 
         Ok(())
     }
